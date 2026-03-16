@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CashVibe AI Chat</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.chatbox{
+width:360px;
+height:600px;
+background:#111827;
+border-radius:20px;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+box-shadow:0 0 25px rgba(0,0,0,0.6);
+}
+
+.header{
+background:#22c55e;
+color:white;
+padding:15px;
+font-size:18px;
+}
+
+.messages{
+flex:1;
+padding:10px;
+overflow-y:auto;
+}
+
+.msg{
+padding:10px 14px;
+margin:8px;
+border-radius:12px;
+max-width:70%;
+}
+
+.user{
+background:#22c55e;
+align-self:flex-end;
+color:white;
+}
+
+.ai{
+background:#374151;
+color:white;
+}
+
+.inputbox{
+display:flex;
+padding:10px;
+background:#1f2937;
+}
+
+input{
+flex:1;
+padding:10px;
+border:none;
+border-radius:8px;
+outline:none;
+}
+
+button{
+margin-left:5px;
+padding:10px 14px;
+border:none;
+border-radius:8px;
+background:#22c55e;
+color:white;
+cursor:pointer;
+}
+
+.typing{
+font-size:12px;
+color:#9ca3af;
+margin-left:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="chatbox">
+
+<div class="header">
+CashVibe AI 🤖
+</div>
+
+<div class="messages" id="messages"></div>
+
+<div class="typing" id="typing"></div>
+
+<div class="inputbox">
+<input id="text" placeholder="Message">
+<button onclick="send()">Send</button>
+<button onclick="voice()">🎤</button>
+</div>
+
+</div>
+
+<script>
+
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang="en-IN";
+
+function voice(){
+recognition.start();
+}
+
+recognition.onresult=function(e){
+let text=e.results[0][0].transcript;
+document.getElementById("text").value=text;
+send();
+}
+
+function addMsg(text,type){
+
+let div=document.createElement("div");
+div.className="msg "+type;
+div.innerText=text;
+
+document.getElementById("messages").appendChild(div);
+
+document.getElementById("messages").scrollTop=9999;
+
+}
+
+function send(){
+
+let text=document.getElementById("text").value;
+
+if(!text)return;
+
+addMsg(text,"user");
+
+document.getElementById("text").value="";
+
+document.getElementById("typing").innerText="AI typing...";
+
+setTimeout(()=>{
+
+let reply=aiReply(text.toLowerCase());
+
+document.getElementById("typing").innerText="";
+
+addMsg(reply,"ai");
+
+speak(reply);
+
+},1000);
+
+}
+
+function aiReply(t){
+
+if(t.includes("cashvibe"))
+return "CashVibe ek online earning platform hai jahan users tasks aur referral se coins earn karte hain.";
+
+if(t.includes("earn"))
+return "Aap daily tasks, spin wheel, ads watch aur friends ko refer karke coins kama sakte hain.";
+
+if(t.includes("withdraw"))
+return "Minimum coins complete hone par aap recharge ya withdrawal kar sakte hain.";
+
+if(t.includes("signup"))
+return "Signup karne ke liye cashvibe dot in website open kare aur account banaye.";
+
+return "CashVibe me earning karne ke liye login karke tasks complete kare.";
+
+}
+
+function speak(text){
+
+let speech=new SpeechSynthesisUtterance(text);
+
+speech.lang="en-US";
+
+let voices=speechSynthesis.getVoices();
+
+speech.voice=voices.find(v=>v.name.includes("Female"))||voices[1];
+
+speechSynthesis.speak(speech);
+
+}
+
+</script>
+
+</body>
+</html>
