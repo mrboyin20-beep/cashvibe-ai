@@ -15,11 +15,11 @@ height:100vh;
 color:white;
 }
 
-.call-ui{
-width:300px;
+.box{
+width:320px;
 background:#111827;
-border-radius:20px;
 padding:30px;
+border-radius:20px;
 text-align:center;
 box-shadow:0 0 40px rgba(0,0,0,0.7);
 }
@@ -38,36 +38,35 @@ font-size:30px;
 
 .status{
 margin-top:15px;
-font-size:16px;
 color:#9ca3af;
 }
 
 button{
-margin-top:20px;
+margin-top:15px;
 padding:12px 20px;
 border:none;
 border-radius:12px;
+cursor:pointer;
 background:#22c55e;
 color:white;
-cursor:pointer;
 }
 
 .end{
 background:red;
 }
-
 </style>
+
 </head>
 
 <body>
 
-<div class="call-ui">
+<div class="box">
 
 <div class="avatar">🤖</div>
 
 <h2>CashVibe Support</h2>
 
-<div class="status" id="status">Ready to Call</div>
+<p id="status">Ready to Call</p>
 
 <button onclick="startCall()">📞 Start Call</button>
 <button class="end" onclick="endCall()">❌ End</button>
@@ -77,24 +76,46 @@ background:red;
 <script>
 
 let recognition;
-let isCalling=false;
+let calling=false;
+let step=0;
 
 function startCall(){
 
-isCalling=true;
+calling=true;
+step=0;
 
 document.getElementById("status").innerText="Calling...";
 
 setTimeout(()=>{
-speak("Hello! Welcome to CashVibe support. Main aapki help ke liye yahan hoon.");
-listen();
+askQuestion();
 },1500);
 
 }
 
-function listen(){
+function askQuestion(){
 
-if(!isCalling) return;
+if(!calling) return;
+
+let questions=[
+"Kya aap CashVibe ke baare me jaana chahte hain?",
+"Kya aap earning process samajhna chahte hain?",
+"Kya aap withdrawal ke baare me jaana chahte hain?",
+"Kya aap owner se baat karna chahte hain?"
+];
+
+let q = questions[step];
+
+speak(q);
+
+setTimeout(()=>{
+startListening();
+},3000);
+
+}
+
+function startListening(){
+
+if(!calling) return;
 
 recognition=new(window.SpeechRecognition || window.webkitSpeechRecognition)();
 
@@ -110,53 +131,88 @@ let text=e.results[0][0].transcript.toLowerCase();
 
 document.getElementById("status").innerText="You: "+text;
 
-let reply=ai(text);
+// YES
+if(text.includes("haan") || text.includes("yes")){
+
+handleYes();
+
+}
+// NO
+else if(text.includes("na") || text.includes("no")){
+
+handleNo();
+
+}else{
+
+speak("Kripya sirf haan ya na me jawab dein");
+
+setTimeout(startListening,2000);
+
+}
+
+};
+
+recognition.onerror=function(){
+document.getElementById("status").innerText="Mic issue... retrying";
+setTimeout(startListening,2000);
+};
+
+}
+
+function handleYes(){
+
+if(step===0){
+speak("CashVibe ek earning platform hai jahan aap tasks aur referral se paisa kama sakte hain.");
+}
+
+if(step===1){
+speak("Aap daily tasks aur ads dekh kar earning kar sakte hain.");
+}
+
+if(step===2){
+speak("Minimum balance hone par aap withdrawal kar sakte hain.");
+}
+
+if(step===3){
+connectOwner();
+return;
+}
+
+step++;
 
 setTimeout(()=>{
-speak(reply);
-},500);
+askQuestion();
+},4000);
 
-if(text.includes("owner") || text.includes("human")){
-connectOwner();
+}
+
+function handleNo(){
+
+step++;
+
+if(step<4){
+askQuestion();
 }else{
-setTimeout(()=>listen(),1000);
+speak("Dhanyavaad, aapka din shubh ho");
+endCall();
 }
 
-}
-
-}
-
-function ai(t){
-
-if(t.includes("cashvibe"))
-return "CashVibe ek online earning platform hai jahan aap tasks, spin aur referral se earning kar sakte hain.";
-
-if(t.includes("earn"))
-return "Aap daily tasks, ads dekh kar aur spin se coins kama sakte hain.";
-
-if(t.includes("withdraw"))
-return "Minimum coins hone par aap withdrawal kar sakte hain.";
-
-if(t.includes("signup"))
-return "Signup karne ke liye cashvibe dot in website open kare.";
-
-return "Aap CashVibe ke baare me kuch bhi puch sakte hain.";
 }
 
 function speak(text){
 
-let speech=new SpeechSynthesisUtterance(text);
+let msg=new SpeechSynthesisUtterance(text);
 
-speech.lang="en-US";
+msg.lang="en-US";
 
 let voices=speechSynthesis.getVoices();
-
-// girl voice select
-speech.voice = voices.find(v=>v.name.toLowerCase().includes("female")) || voices[1];
+if(voices.length>0){
+msg.voice=voices[1];
+}
 
 document.getElementById("status").innerText="AI: "+text;
 
-speechSynthesis.speak(speech);
+speechSynthesis.speak(msg);
 
 }
 
@@ -166,13 +222,13 @@ speak("Main aapko owner se connect kar rahi hoon");
 
 setTimeout(()=>{
 window.location.href="tel:+919288678795";
-},2000);
+},3000);
 
 }
 
 function endCall(){
 
-isCalling=false;
+calling=false;
 
 if(recognition) recognition.stop();
 
